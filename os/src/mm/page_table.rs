@@ -8,13 +8,21 @@ use bitflags::*;
 bitflags! {
     /// page table entry flags
     pub struct PTEFlags: u8 {
+        /// valid
         const V = 1 << 0;
+        /// read
         const R = 1 << 1;
+        /// write
         const W = 1 << 2;
+        /// execute
         const X = 1 << 3;
+        /// user
         const U = 1 << 4;
+        /// global
         const G = 1 << 5;
+        /// accessed
         const A = 1 << 6;
+        /// dirty
         const D = 1 << 7;
     }
 }
@@ -170,4 +178,13 @@ pub fn translated_byte_buffer(token: usize, ptr: *const u8, len: usize) -> Vec<&
         start = end_va.into();
     }
     v
+}
+/// 地址转换
+pub fn va2pa(token:usize, ptr: usize) -> usize {
+    let page_table = PageTable::from_token(token);
+    let va = VirtAddr::from(ptr);
+    let vpn = va.floor();
+    let ppn = page_table.translate(vpn).unwrap().ppn();
+    let pa = usize::from(ppn) << 12 | va.page_offset();
+    pa.into()
 }
